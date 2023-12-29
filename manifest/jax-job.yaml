@@ -1,0 +1,58 @@
+apiVersion: metacontroller.k8s.io/v1alpha1
+kind: DecoratorController
+metadata:
+  name: jax-job
+spec:
+  resources:
+  - apiVersion: batch/v1
+    resource: jobs
+    annotationSelector:
+      matchExpressions:
+      - {key: jax-job-label, operator: Exists}
+  attachments:
+  - apiVersion: batch/v1
+    resource: jobs
+    updateStrategy:
+      method: Recreate
+  hooks:
+    sync:
+      webhook:
+        url: http://jax-job-controller.kubeflow/sync
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jax-job-controller
+  namespace: kubeflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jax-job-controller
+  template:
+    metadata:
+      labels:
+        app: jax-job-controller
+    spec:
+      containers:
+      - name: controller
+        image: python:2.7
+        command: ["python", "/hooks/sync.py"]
+        volumeMounts:
+        - name: hooks
+          mountPath: /hooks
+      volumes:
+      - name: hooks
+        configMap:
+          name: jax-job-controller
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jax-job-controller
+  namespace: kubeflow
+spec:
+  selector:
+    app: jax-job-controller
+  ports:
+  - port: 80

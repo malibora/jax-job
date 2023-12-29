@@ -1,0 +1,7 @@
+resources:
+- jax-job.yaml
+configMapGenerator:
+- name: jax-job-controller
+  namespace: kubeflow
+  files:
+  - sync.py
