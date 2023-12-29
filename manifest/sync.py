@@ -26,50 +26,61 @@ class Controller(BaseHTTPRequestHandler):
   def sync(self, job, children):
     logging.debug('Children: %s', children)
     newJob = self.new_Job(job)
-    return {'attachments': [newJob] }
+    return {'children': [newJob] }
+
+
+  def new_Job(self, oldJob):
+    newJob = {
+      'apiVersion': 'apps/v1',
+      'kind': 'Deployment',
+      'metadata': {
+          'name': 'jax-deployment1',
+          'labels': {
+              'app': 'jax'
+          },
+      },
+      'spec': {
+          'replicas': oldJob['spec']['replicas'],
+          'selector': {
+              'matchLabels': {
+                  'app': 'jax'
+              }
+          },
+          'template': {
+              'metadata': {
+                  'labels': {
+                      'app': 'jax'
+                  }
+              },
+              'spec': {
+                  'containers': [
+                      {
+                          'name': 'busybox',
+                          'image': 'busybox',
+                          'command':oldJob['spec']['template']['spec']['containers'][0]['command'],
+                          'env':[{'name':'tst', 'value':'tst'}],
+                          'ports': [
+                              {
+                                  'containerPort': 80
+                              }
+                          ]
+                      }
+                  ]
+              }
+          }
+      }
+  }
+
+    return newJob
 
 
   def do_POST(self):
     observed = json.loads(self.rfile.read(int(self.headers.getheader('content-length'))))
-    desired = self.sync(observed['object'], observed['attachments'])
+    desired = self.sync(observed['parent'], observed['children'])
 
     self.send_response(200)
     self.send_header('Content-type', 'application/json')
     self.end_headers()
     self.wfile.write(json.dumps(desired))
-
-  def new_Job(self, oldJob):
-    newJob = {
-        'apiVersion': 'batch/v1',
-        'kind': 'Job'
-    }
-
-    newJob['metadata']= {
-      'name': 'job-backoff-limit-per-index-example1',
-      # 'annotations': {
-      #     'jax-job-label': 'jax'
-      #}
-    }
-
-    newJob['spec'] ={
-      'completions': 10,
-      'parallelism': 3,
-      'completionMode': 'Indexed',
-    }
-
-    newJob['spec']['template'] ={
-      'spec': {
-        'restartPolicy': 'Never',
-        'containers': [
-          {
-            'env':[{'name':'tst', 'value':'tst'}],
-            'name': 'example',
-            'image': 'python',
-            'command': oldJob['spec']['template']['spec']['containers'][0]['command']
-          }
-        ]
-      }
-    }
-    return newJob
 
 HTTPServer(('', 80), Controller).serve_forever()

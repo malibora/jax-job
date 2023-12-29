@@ -1,19 +1,20 @@
+---
 apiVersion: metacontroller.k8s.io/v1alpha1
-kind: DecoratorController
+kind: CompositeController
 metadata:
   name: jax-job
 spec:
-  resources:
-  - apiVersion: batch/v1
-    resource: jobs
-    annotationSelector:
-      matchExpressions:
-      - {key: jax-job-label, operator: Exists}
-  attachments:
-  - apiVersion: batch/v1
-    resource: jobs
-    updateStrategy:
-      method: Recreate
+  generateSelector: true
+  parentResource:
+    apiVersion: nebius.ai/v1
+    resource: jaxjobs
+  childResources:
+    - apiVersion: v1
+      resource: pods
+    - apiVersion: apps/v1
+      resource: deployments
+      updateStrategy:
+        method: Recreate
   hooks:
     sync:
       webhook:

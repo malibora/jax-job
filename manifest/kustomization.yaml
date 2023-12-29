@@ -1,4 +1,5 @@
 resources:
+- jax-job-crd.yaml
 - jax-job.yaml
 configMapGenerator:
 - name: jax-job-controller
