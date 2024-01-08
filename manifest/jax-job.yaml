@@ -11,8 +11,6 @@ spec:
   childResources:
     - apiVersion: v1
       resource: pods
-    - apiVersion: apps/v1
-      resource: deployments
       updateStrategy:
         method: Recreate
   hooks:
@@ -20,6 +18,28 @@ spec:
       webhook:
         url: http://jax-job-controller.kubeflow/sync
 ---
+# apiVersion: metacontroller.k8s.io/v1alpha1
+# kind: DecoratorController
+# metadata:
+#   name: jax-job
+# spec:
+#   resources:
+#   - apiVersion: nebius.ai/v1
+#     resource: jaxjobs
+#     annotationSelector:
+#       matchExpressions:
+#       - {key: jax-job-label, operator: Exists}
+#   attachments:
+#   - apiVersion: v1
+#     resource: pods
+#     updateStrategy:
+#       method: Recreate
+#   hooks:
+#     sync:
+#       webhook:
+#         url: http://jax-job-controller.kubeflow/sync
+
+# ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:

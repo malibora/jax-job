@@ -1,18 +1,30 @@
-apiVersion: batch/v1
-kind: Job
+apiVersion: nebius.ai/v1
+kind: JaxJob
 metadata:
-  name: job-backoff-limit-per-index-example
+  name: jax-job
+  labels:
+    app: jax
   annotations:
     jax-job-label: jax
 spec:
-  completions: 10
-  parallelism: 3
-  completionMode: Indexed  # required for the feature
+  parallelism: 7
   template:
+    metadata:
+      labels:
+        app: jax
     spec:
-      restartPolicy: Never # required for the feature
       containers:
-      containers:
-        - name: busybox
-          image: busybox
-          command: ['bin/sh', '-c', 'sleep 2001;']
+      - name: busybox
+        image: busybox
+        command: ['bin/sh', '-c', 'number=$((RANDOM % 5 + 1)); echo "Random number: $number"; [ $number -eq 1 ] && { echo "Exiting with error"; sleep 120 ; exit 1; } || { echo "Sleeping for 3600 seconds"; sleep 3600; }']
+        # resources:
+        #   limits:
+        #     nvidia.com/gpu: 1 
+      #   volumeMounts:
+      #   - name: nfs-volume
+      #     mountPath: /usr/share/nfs
+      # volumes:
+      # - name: nfs-volume
+      #   nfs:
+      #     server: nfs-service.nfs.svc.cluster.local
+      #     path: /

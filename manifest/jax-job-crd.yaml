@@ -18,7 +18,7 @@ spec:
             spec:
               type: object
               properties:
-                replicas:
+                parallelism:
                   type: integer
                 template:
                   type: object
@@ -38,6 +38,7 @@ spec:
                       type: object
                       properties:
                         containers:
+                          x-kubernetes-preserve-unknown-fields: true
                           type: array
                           items:
                             type: object
@@ -50,13 +51,26 @@ spec:
                                 type: array
                                 items:
                                   type: string
-                              ports:
+                              args:
+                                type: array
+                                items:
+                                  type: string
+                              volumeMounts:
                                 type: array
                                 items:
                                   type: object
                                   properties:
-                                    containerPort:
-                                      type: integer
+                                    name:
+                                      type: string
+                                    mountPath:
+                                      type: string
+                        restartPolicy:
+                          type: string
+                        volumes:
+                          x-kubernetes-preserve-unknown-fields: true
+                          type: array
+                          items:
+                            type: object
   scope: Namespaced
   names:
     plural: jaxjobs
